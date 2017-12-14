@@ -1,24 +1,48 @@
 import React from 'react';
-import NameInputHoc from './NameInputHOC';
+import { connect } from 'react-redux';
+import { resolveDomainRequested } from 'actions/ens';
+import { isValidENSName } from 'libs/validators';
 
 interface Props {
+  // TODO: Update type
+  resolveDomainRequested: any;
+}
+
+interface State {
   isValidDomain: boolean;
   domainToCheck: string;
-  onClick(ev: React.FormEvent<HTMLButtonElement>): void;
-  onChange(ev: React.FormEvent<HTMLInputElement>): void;
 }
-class ENSNameInput extends React.Component<Props, {}> {
+
+// TODO: Update state types
+class ENSNameInput extends React.Component<Props, State | any> {
+  public state = {
+    isValidDomain: false,
+    domainToCheck: ''
+  };
+
+  public onChange = (event: React.FormEvent<HTMLInputElement>): void => {
+    const domainToCheck: string = event.currentTarget.value;
+    this.setState({ domainToCheck });
+    const isValidName: boolean = isValidENSName(domainToCheck);
+    this.setState({ isValidDomain: isValidName });
+  };
+
+  public onClick = (): void => {
+    const { isValidDomain, domainToCheck } = this.state;
+    const { resolveDomainRequested } = this.props;
+    return isValidDomain && resolveDomainRequested(domainToCheck);
+  };
+
   public render() {
-    const { onChange, onClick, isValidDomain, domainToCheck } = this.props;
+    const { isValidDomain, domainToCheck } = this.state;
+    const { onChange, onClick } = this;
     return (
-      <article className="row">
+      <article className="row Tab-content-pane">
         <section className="col-xs-12 col-sm-6 col-sm-offset-3 text-center">
           <div className="input-group">
             <input
               className={`form-control ${
-                domainToCheck === ''
-                  ? ''
-                  : isValidDomain ? 'is-valid' : 'is-invalid'
+                domainToCheck === '' ? '' : isValidDomain ? 'is-valid' : 'is-invalid'
               }`}
               type="text"
               placeholder="myetherwallet"
@@ -38,4 +62,6 @@ class ENSNameInput extends React.Component<Props, {}> {
   }
 }
 
-export default NameInputHoc(ENSNameInput);
+export default connect(null, {
+  resolveDomainRequested
+})(ENSNameInput);
